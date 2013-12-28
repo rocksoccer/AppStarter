@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace AppStarter
 {
-    class ServiceInfo
+    public class ServiceInfo
     {
         public ServiceInfo (string name, string type, string status)
         {
