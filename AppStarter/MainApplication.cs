@@ -9,10 +9,14 @@ namespace AppStarter
 {
     class MainApplication
     {
-        public static void Main()
+        public static void Main(string[] args)
         {
-            ApplicationInfo appInfo = new ApplicationInfo(XDocument.Load("test.xml"));
-            appInfo.Start();
+            if (args.Count()==1)
+            {
+                ApplicationInfo appInfo = new ApplicationInfo(XDocument.Load(args[0])); //"test.xml"
+                appInfo.Start();
+            }
+            //TODO: when no param is given, show the UI
         }
     }
 }

@@ -122,14 +122,15 @@ namespace AppStarter
                         catch (InvalidOperationException e)
                         {
                             //in some cases, the service status might be changed although the exception is thrown
+                            Thread.Sleep(TimeSpan.FromSeconds(5)); //wait a little bit time to try again
+                            
+                            serviceController.Refresh();
                             tryAgain = (!serviceController.Status.Equals(status)) && tryCount < TOTAL_TRY; 
                             if (!tryAgain)
                                 throw e;
                             else
                             {
                                 Console.WriteLine("try: " + tryCount.ToString() + " : " + serviceController.Status.ToString());
-
-                                Thread.Sleep(TimeSpan.FromSeconds(5)); //wait a little bit time to try again
                             }
 
                             tryCount++;
