@@ -56,6 +56,7 @@ namespace AppStarter
         void serviceUtil_Completed(object sender, EventArgs e)
         {
             serviceUtil.Completed -= serviceUtil_Completed;
+            serviceUtil.Completed += serviceUtil_End;
             //TODO: attach another complete handler, so that other actions after all services are stopped
 
             //start the main program
@@ -77,6 +78,11 @@ namespace AppStarter
 
             serviceUtil.ServicesInfo = servicesInfo;
             Start();
+        }
+
+        void serviceUtil_End(object sender, EventArgs e)
+        {
+            Console.WriteLine("restored the status");
         }
     } //class end
 }

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ServiceProcess;
 using System.Runtime.InteropServices;
+using System.Management;
 
 namespace AppStarter
 {
@@ -84,10 +85,14 @@ namespace AppStarter
 
                 serviceController.ServiceName = serviceInfo.Name;
 
-                enableService(serviceInfo.Status.Equals(ServiceControllerStatus.Running));
+                bool enable = serviceInfo.Status.Equals(ServiceControllerStatus.Running);
+
+                enableService(enable);
                 setServiceStatus(serviceInfo.Status);
             }
         }
+
+        private const int TOTAL_TRY = 5;
 
         private void setServiceStatus(ServiceControllerStatus status)
         {
@@ -101,11 +106,36 @@ namespace AppStarter
                 {
                     TimeSpan timeoutSec = TimeSpan.FromSeconds(timeout);
 
-                    if(status.Equals(ServiceControllerStatus.Running))
-                        serviceController.Start(); //TODO: support arguments
-                    else
-                        serviceController.Stop();
+                    bool tryAgain = false;
+                    int tryCount = 0;
+
+                    do
+                    {
+                        try
+                        {
+                            if (status.Equals(ServiceControllerStatus.Running))
+                                serviceController.Start(); //TODO: support arguments
+                            else
+                                serviceController.Stop();
+                        }
+                        catch (InvalidOperationException e)
+                        {
+                            //in some cases, the service status might be changed although the exception is thrown
+                            tryAgain = (!serviceController.Status.Equals(status)) && tryCount < TOTAL_TRY; 
+                            if (!tryAgain)
+                                throw e;
+                            else
+                            {
+                                Console.WriteLine("try: " + tryCount.ToString() + " : " + serviceController.Status.ToString());
+                            }
+
+                            tryCount++;
+                        }
+                    } while (tryAgain);
+
                     serviceController.WaitForStatus(status, timeoutSec);
+
+                    Console.WriteLine(serviceController.Status.ToString());
 
                     //check the status to make sure it is started properly
                     if (serviceController.Status.Equals(status))
@@ -119,13 +149,13 @@ namespace AppStarter
                 }
                 //TODO: there should be configuration for the app
                 //when error occurs to a service, should it stop or continue to next service?
-                catch (InvalidOperationException)
+                catch (InvalidOperationException e)
                 {
-                    OnError();
+                    OnError(e);
                 }
-                catch (System.ServiceProcess.TimeoutException)
+                catch (System.ServiceProcess.TimeoutException e)
                 {
-                    OnError();
+                    OnError(e);
                 }
             }
         }
@@ -139,9 +169,9 @@ namespace AppStarter
                 else
                     ChangeStartMode(serviceController, ServiceStartMode.Disabled);
             }
-            catch (ExternalException)
+            catch (ExternalException e)
             {
-                OnError();
+                OnError(e);
             }
         }
 
@@ -158,15 +188,20 @@ namespace AppStarter
                 OnComplete();
         }
 
-        protected void OnError()
+        protected void OnError(Exception e)
         {
+            if (e != null)
+            {
+                Console.WriteLine(e.ToString());
+            }
+
             if (Error != null)
                 Error(this, EventArgs.Empty);
         }
 
         protected void OnProgress(int idx)
         {
-            if (Progress!=null)
+            if (Progress != null)
             {
                 ServiceProcessProgressEventArgs arg = new ServiceProcessProgressEventArgs();
                 arg.NumCompleted = idx;
@@ -186,82 +221,30 @@ namespace AppStarter
                 Completed(this, EventArgs.Empty);
         }
 
-
+        
         #region the methods to set service mode
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern Boolean ChangeServiceConfig(
-            IntPtr hService,
-            UInt32 nServiceType,
-            UInt32 nStartType,
-            UInt32 nErrorControl,
-            String lpBinaryPathName,
-            String lpLoadOrderGroup,
-            IntPtr lpdwTagId,
-            String lpDependencies,
-            String lpServiceStartName,
-            String lpPassword,
-            String lpDisplayName);
-
-        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        private static extern IntPtr OpenService(
-            IntPtr hSCManager, string lpServiceName, uint dwDesiredAccess);
-
-        [DllImport("advapi32.dll", EntryPoint = "OpenSCManagerW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern IntPtr OpenSCManager(string machineName, string databaseName, uint dwAccess);
-
-        [DllImport("advapi32.dll", EntryPoint = "CloseServiceHandle")]
-        private static extern int CloseServiceHandle(IntPtr hSCObject);
-
-        private const uint SERVICE_NO_CHANGE = 0xFFFFFFFF;
-        private const uint SERVICE_QUERY_CONFIG = 0x00000001;
-        private const uint SERVICE_CHANGE_CONFIG = 0x00000002;
-        private const uint SC_MANAGER_ALL_ACCESS = 0x000F003F;
-
         /// <summary>
-        /// See http://peterkellyonline.blogspot.de/2011/04/configuring-windows-service.html
+        /// See http://www.codeproject.com/Articles/7665/Extend-ServiceController-class-to-change-the-Start
         /// </summary>
+        /// <param name="serviceController"></param>
         /// <param name="mode"></param>
         private void ChangeStartMode(ServiceController serviceController, ServiceStartMode mode)
         {
-            var scManagerHandle = OpenSCManager(null, null, SC_MANAGER_ALL_ACCESS);
-            if (scManagerHandle == IntPtr.Zero)
-            {
-                throw new ExternalException("Open Service Manager Error");
-            }
+            /*if (value != "Automatic" && value != "Manual" && value != "Disabled")
+                throw new Exception("The valid values are Automatic, Manual or Disabled");*/
 
-            var serviceHandle = OpenService(
-                scManagerHandle,
-                serviceController.ServiceName,
-                SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG);
+            //construct the management path
+            Console.WriteLine("change service " + serviceController.ServiceName + " to " + mode.ToString());
+            string path = "Win32_Service.Name='" + serviceController.ServiceName + "'";
+            ManagementPath p = new ManagementPath(path);
+            //construct the management object
+            ManagementObject ManagementObj = new ManagementObject(p);
+            //we will use the invokeMethod method of the ManagementObject class
+            object[] parameters = new object[1];
+            parameters[0] = mode.ToString();
+            object result = ManagementObj.InvokeMethod("ChangeStartMode", parameters);
 
-            if (serviceHandle == IntPtr.Zero)
-            {
-                throw new ExternalException("Open Service Error");
-            }
-
-            var result = ChangeServiceConfig(
-                serviceHandle,
-                SERVICE_NO_CHANGE,
-                (uint)mode,
-                SERVICE_NO_CHANGE,
-                null,
-                null,
-                IntPtr.Zero,
-                null,
-                null,
-                null,
-                null);
-
-            if (result == false)
-            {
-                int nError = Marshal.GetLastWin32Error();
-                var win32Exception = new Win32Exception(nError);
-                throw new ExternalException("Could not change service start type: "
-                    + win32Exception.Message);
-            }
-
-            CloseServiceHandle(serviceHandle);
-            CloseServiceHandle(scManagerHandle);
+            Console.WriteLine("result: " + result);
         }
 
         #endregion
