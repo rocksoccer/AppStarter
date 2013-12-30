@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.ServiceProcess;
 using System.Runtime.InteropServices;
@@ -127,6 +128,8 @@ namespace AppStarter
                             else
                             {
                                 Console.WriteLine("try: " + tryCount.ToString() + " : " + serviceController.Status.ToString());
+
+                                Thread.Sleep(TimeSpan.FromSeconds(5)); //wait a little bit time to try again
                             }
 
                             tryCount++;
