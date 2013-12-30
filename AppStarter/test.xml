@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Application>
+  <name>
+    VMWare Workstation
+  </name>
+  <path>
+    C:\Program Files (x86)\VMware\VMware Workstation\vmware.exe
+  </path>
+  <params/>  
+  <services>
+    <service>
+      <name>VMAuthdService</name>
+      <status>running</status>
+      <params/>
+    </service>
+    <service>
+      <name>VMUSBArbService</name>
+      <status>running</status>
+      <params/>
+    </service>
+    <service>
+      <name>VMwareHostd</name>
+      <status>running</status>
+      <params/>
+    </service>
+    <service>
+      <name>VMnetDHCP</name>
+      <status>running</status>
+      <params/>
+    </service>
+    <service>
+      <name>VMware NAT Service</name>
+      <status>running</status>
+      <params/>
+    </service>
+  </services>
+</Application>

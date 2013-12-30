@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -9,6 +10,8 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace AppStarter
 {
@@ -21,30 +24,8 @@ namespace AppStarter
 
         private void StartBtn_Click(object sender, EventArgs e)
         {
-            Console.WriteLine("hello world");
-
-            //TODO: read the config from file
-            List<ServiceInfo> info=new List<ServiceInfo>();
-            info.Add(new ServiceInfo("VMAuthdService", "", "running"));
-            info.Add(new ServiceInfo("VMUSBArbService", "", "running"));
-            info.Add(new ServiceInfo("VMwareHostd", "", "running"));
-
-            ServiceUtil serviceUtil = new ServiceUtil(ServiceUtil.DEFAULT_TIME_OUT, info);
-            serviceUtil.Completed += serviceUtil_Completed;
-            serviceUtil.Error += serviceUtil_Error;
-            serviceUtil.ProcessServices();
-        }
-
-        void serviceUtil_Error(object sender, EventArgs e)
-        {
-            Console.WriteLine("Error");
-        }
-
-        void serviceUtil_Completed(object sender, EventArgs e)
-        {
-            Console.WriteLine("finished");
-
-            //start the main program
+            ApplicationInfo appInfo=new ApplicationInfo(XDocument.Load("test.xml"));
+            appInfo.Start();
         }
     } //class end
 }
