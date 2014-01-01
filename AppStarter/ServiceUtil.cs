@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ServiceProcess;
-using System.Runtime.InteropServices;
 using System.Management;
+using System.Runtime.InteropServices;
+using System.ServiceProcess;
+using System.Threading;
 
 namespace AppStarter
 {
@@ -125,13 +122,12 @@ namespace AppStarter
                             Thread.Sleep(TimeSpan.FromSeconds(5)); //wait a little bit time to try again
                             
                             serviceController.Refresh();
-                            tryAgain = (!serviceController.Status.Equals(status)) && tryCount < TOTAL_TRY; 
-                            if (!tryAgain)
+                            if (serviceController.Status.Equals(status)) //equal
+                                tryAgain = false;
+                            else if (tryCount < TOTAL_TRY) //not equal, not reach total
+                                tryAgain = true;
+                            else //when not equal to status, AND reach total try
                                 throw e;
-                            else
-                            {
-                                Console.WriteLine("try: " + tryCount.ToString() + " : " + serviceController.Status.ToString());
-                            }
 
                             tryCount++;
                         }

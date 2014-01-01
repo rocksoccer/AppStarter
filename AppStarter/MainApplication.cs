@@ -1,22 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml.Linq;
 
 namespace AppStarter
 {
     class MainApplication
     {
-        public static void Main(string[] args)
+        static Mutex mutex = new Mutex(true, "d091402b-6b1a-40a8-8a6e-161d9140a491");
+
+        private static MainForm mainForm;
+
+        [STAThread]
+        static void Main(string[] args)
         {
-            if (args.Count()==1)
+            if (mutex.WaitOne(TimeSpan.Zero, true))
             {
-                ApplicationInfo appInfo = new ApplicationInfo(XDocument.Load(args[0])); //"test.xml"
-                appInfo.Start();
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                mainForm=new MainForm();
+
+                if (args.Count() == 1)
+                {
+                    mainForm.StartApplication(args[0]);
+                }
+
+                Application.Run(mainForm);
+
+                mutex.ReleaseMutex();
             }
-            //TODO: when no param is given, show the UI
+            else
+            {
+                Console.WriteLine("we already have an instance");
+            }
         }
     }
 }
