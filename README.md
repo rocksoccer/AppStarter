@@ -17,12 +17,14 @@ The reasons for this problem to be more common with outsourceing teams are compl
 The application is not completely ready yet, and some of the important features are not finished.
 
 At the moment, only the funcationalities works fine.
+
 1. Start the services required for the main program.
 2. Start the program and monitor its lifespan.
 3. Stop the services and restore their services after the exit of the main program.
 4. Auto exit of the monitor after the exit of last program.
 
-Some of the not-implemented features which are going to be added in near future
+Some of the not-implemented features which are going to be added in near future.
+
 1. Wizard to help user to create config XML and shortcut.
 2. Some notification about progress, because some services might take more than 10 seconds to start or stop.
 3. Downgrade the version of .Net, to make the program available to more old computers which suffer more from the loaded unnecessary services because of their limited memory.
