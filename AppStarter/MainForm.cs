@@ -1,14 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml.Linq;
 
 namespace AppStarter
 {
@@ -29,6 +20,43 @@ namespace AppStarter
         public void StartApplication(string configFile)
         {
             appMgr.StartApplication(configFile);
+        }
+
+        public void CreateNotifyIcon()
+        {
+            if (notifyIcon == null)
+            {
+                this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
+                this.notifyIconMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+                this.notifyIconExitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+                this.notifyIconMenuStrip.SuspendLayout();
+
+                // 
+                // notifyIcon
+                // 
+                this.notifyIcon.ContextMenuStrip = this.notifyIconMenuStrip;
+                this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
+                this.notifyIcon.Text = "App Starter";
+                this.notifyIcon.Visible = true;
+                this.notifyIcon.DoubleClick += new System.EventHandler(this.notifyIcon_DoubleClick);
+                // 
+                // notifyIconMenuStrip
+                // 
+                this.notifyIconMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+                    this.notifyIconExitMenuItem
+                });
+                this.notifyIconMenuStrip.Name = "notifyIconMenuStrip";
+                this.notifyIconMenuStrip.Size = new System.Drawing.Size(93, 26);
+                // 
+                // notifyIconExitMenuItem
+                // 
+                this.notifyIconExitMenuItem.Name = "notifyIconExitMenuItem";
+                this.notifyIconExitMenuItem.Size = new System.Drawing.Size(92, 22);
+                this.notifyIconExitMenuItem.Text = "Exit";
+                this.notifyIconExitMenuItem.Click += new System.EventHandler(this.notifyIconExitMenuItem_Click);
+
+                this.notifyIconMenuStrip.ResumeLayout(false);
+            }
         }
 
         void appMgr_AllAppsExited(object sender, EventArgs e)

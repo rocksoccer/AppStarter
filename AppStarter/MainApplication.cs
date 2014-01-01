@@ -1,42 +1,68 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Microsoft.VisualBasic.ApplicationServices;
+using System;
+using System.Collections.ObjectModel;
 using System.Windows.Forms;
-using System.Xml.Linq;
 
 namespace AppStarter
 {
     class MainApplication
     {
-        static Mutex mutex = new Mutex(true, "d091402b-6b1a-40a8-8a6e-161d9140a491");
-
-        private static MainForm mainForm;
-
         [STAThread]
         static void Main(string[] args)
         {
-            if (mutex.WaitOne(TimeSpan.Zero, true))
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            SingleInstanceApplication.Run(new MainForm(), StartupHandler, StartupNextInstanceHandler);
+        }
+
+        static void StartupHandler(object sender, StartupEventArgs e)
+        {
+            SingleInstanceApplication app = (SingleInstanceApplication) sender;
+            MainForm form = (MainForm) app.AppMainForm;
+
+            form.CreateNotifyIcon();
+
+            processCommandLine(form, e.CommandLine);
+        }
+
+        static void StartupNextInstanceHandler(object sender, StartupNextInstanceEventArgs e)
+        {
+            SingleInstanceApplication app = (SingleInstanceApplication)sender;
+            MainForm form = (MainForm)app.AppMainForm;
+
+            processCommandLine(form, e.CommandLine);
+        }
+
+        static void processCommandLine(MainForm form, ReadOnlyCollection<string> cmdLine)
+        {
+            if (cmdLine.Count == 2)
             {
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                mainForm=new MainForm();
-
-                if (args.Count() == 1)
-                {
-                    mainForm.StartApplication(args[0]);
-                }
-
-                Application.Run(mainForm);
-
-                mutex.ReleaseMutex();
+                form.StartApplication(cmdLine[1]);
             }
-            else
+        }
+    }
+
+    class SingleInstanceApplication : WindowsFormsApplicationBase
+    {
+        private SingleInstanceApplication()
+        {
+            base.IsSingleInstance = true;
+        }
+
+        public static void Run(Form f, StartupEventHandler startupHandler, StartupNextInstanceEventHandler StartupNextInstanceHandler)
+        {
+            SingleInstanceApplication app = new SingleInstanceApplication(); 
+            app.MainForm = f;
+            app.Startup += startupHandler;
+            app.StartupNextInstance += StartupNextInstanceHandler; 
+            app.Run(Environment.GetCommandLineArgs());
+        }
+
+        public Form AppMainForm
+        {
+            get
             {
-                Console.WriteLine("we already have an instance");
+                return MainForm;
             }
         }
     }
