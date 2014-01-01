@@ -28,3 +28,5 @@ Some of the not-implemented features which are going to be added in near future.
 1. Wizard to help user to create config XML and shortcut.
 2. Some notification about progress, because some services might take more than 10 seconds to start or stop.
 3. Downgrade the version of .Net, to make the program available to more old computers which suffer more from the loaded unnecessary services because of their limited memory.
+
+If you have any questions or ideas, feel free to create an issue ticket. Or if you are interested in the project, you are welcome to join me.
